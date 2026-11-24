@@ -39,6 +39,7 @@ dotnet publish -c Release --self-contained -p:PublishSingleFile=true -p:IncludeN
 |---|---|
 | `FolderPeek.exe --diag [atalhos.lnk...]` | Casa todos os ícones do desktop (UIA × IFolderView) sem mexer o mouse; grava `%LOCALAPPDATA%\FolderPeek\diag.txt` |
 | `FolderPeek.exe --preview "C:\pasta"` | Mostra o popup no cursor por 15 s (teste visual) |
+| `FolderPeek.exe --thumb "C:\foto.jpg" saida.png [px]` | Gera a miniatura exatamente como o popup e salva em PNG |
 
 Log: `%LOCALAPPDATA%\FolderPeek\folderpeek.log` · Config: `%APPDATA%\FolderPeek\settings.json`
 (`HoverDelayMs`, `Paused`, `MaxItems`).

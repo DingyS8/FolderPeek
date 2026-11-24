@@ -31,6 +31,18 @@ public partial class App : Application
         //   FolderPeek.exe --diag              → casa todos os ícones do desktop, grava diag.txt
         //   FolderPeek.exe --preview <pasta>   → mostra o popup no cursor por 15 s
         if (e.Args.Contains("--diag")) { RunDiag(); return; }
+        int ti = Array.IndexOf(e.Args, "--thumb"); // --thumb <arquivo> <saida.png>
+        if (ti >= 0 && ti + 2 < e.Args.Length)
+        {
+            string r;
+            int px = ti + 3 < e.Args.Length && int.TryParse(e.Args[ti + 3], out var p) ? p : 96;
+            try { r = ShellImageLoader.DumpToPng(e.Args[ti + 1], px, e.Args[ti + 2]); } catch (Exception ex) { r = ex.ToString(); }
+            Directory.CreateDirectory(Log.Dir);
+            File.WriteAllText(Path.Combine(Log.Dir, "thumb.txt"), r);
+            Shutdown();
+            return;
+        }
+
         int pi = Array.IndexOf(e.Args, "--preview");
         if (pi >= 0 && pi + 1 < e.Args.Length) { RunPreviewDemo(e.Args[pi + 1]); return; }
 

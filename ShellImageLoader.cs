@@ -54,6 +54,18 @@ internal static class ShellImageLoader
         t.Start();
     }
 
+    /// <summary>Diagnóstico (--thumb): gera a imagem como o app geraria e salva em PNG.</summary>
+    public static string DumpToPng(string path, int px, string outFile)
+    {
+        var ext = Path.GetExtension(path);
+        var img = LoadShell(path, px, iconOnly: !ThumbExtensions.Contains(ext)) as BitmapSource;
+        if (img == null) return "falhou";
+        var enc = new PngBitmapEncoder();
+        enc.Frames.Add(BitmapFrame.Create(img));
+        using (var fs = File.Create(outFile)) enc.Save(fs);
+        return $"{img.PixelWidth}x{img.PixelHeight} {img.Format}";
+    }
+
     /// <summary>Descarta pedidos pendentes de pastas que já não estão na tela.</summary>
     public static void NewGeneration() => Interlocked.Increment(ref _generation);
 
@@ -149,40 +161,42 @@ internal static class ShellImageLoader
         public uint biCompression, biSizeImage; public int biXPelsPerMeter, biYPelsPerMeter; public uint biClrUsed, biClrImportant;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct DIBSECTION { public BITMAP dsBm; public BITMAPINFOHEADER dsBmih; public uint f0, f1, f2; public IntPtr dshSection; public uint dsOffset; }
-
-    [DllImport("gdi32.dll")] private static extern int GetObject(IntPtr h, int c, out DIBSECTION ds);
+    [DllImport("gdi32.dll")] private static extern int GetObject(IntPtr h, int c, out BITMAP bm);
     [DllImport("gdi32.dll")] private static extern bool DeleteObject(IntPtr h);
+    [DllImport("gdi32.dll")] private static extern int GetDIBits(IntPtr hdc, IntPtr hbm, uint start, uint lines, byte[] bits, ref BITMAPINFOHEADER bi, uint usage);
+    [DllImport("user32.dll")] private static extern IntPtr GetDC(IntPtr hwnd);
+    [DllImport("user32.dll")] private static extern int ReleaseDC(IntPtr hwnd, IntPtr hdc);
 
     /// <summary>
     /// CreateBitmapSourceFromHBitmap perde o canal alfa dos ícones (fundo preto),
-    /// então copiamos os pixels da DIB na mão. JPEG sem alfa (tudo 0) vira opaco.
+    /// então lemos os pixels nós mesmos — via GetDIBits pedindo 32 bpp top-down.
+    ///
+    /// NÃO copiar bmBits direto: o shell devolve DIBs ora bottom-up, ora top-down
+    /// (depende do tamanho e de vir do thumbcache), e o cabeçalho lido pelo
+    /// GetObject não distingue os dois casos — miniaturas saíam de ponta-cabeça.
+    /// O GetDIBits conhece a orientação real e sempre entrega na ordem pedida.
     /// </summary>
     private static ImageSource? FromHBitmap(IntPtr hbm)
     {
-        if (GetObject(hbm, Marshal.SizeOf<DIBSECTION>(), out var ds) == 0
-            || ds.dsBm.bmBitsPixel != 32 || ds.dsBm.bmBits == IntPtr.Zero)
-        {
-            var fallback = Imaging.CreateBitmapSourceFromHBitmap(hbm, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            fallback.Freeze();
-            return fallback;
-        }
+        if (GetObject(hbm, Marshal.SizeOf<BITMAP>(), out var bm) == 0 || bm.bmWidth <= 0 || bm.bmHeight == 0)
+            return null;
 
-        int w = ds.dsBm.bmWidth, h = Math.Abs(ds.dsBm.bmHeight), stride = ds.dsBm.bmWidthBytes;
+        int w = bm.bmWidth, h = Math.Abs(bm.bmHeight), stride = w * 4;
+        var bi = new BITMAPINFOHEADER
+        {
+            biSize = (uint)Marshal.SizeOf<BITMAPINFOHEADER>(),
+            biWidth = w,
+            biHeight = -h, // negativo = top-down
+            biPlanes = 1,
+            biBitCount = 32,
+        };
         var px = new byte[stride * h];
-        Marshal.Copy(ds.dsBm.bmBits, px, 0, px.Length);
-
-        if (ds.dsBmih.biHeight > 0) // DIB bottom-up → inverte as linhas
+        IntPtr dc = GetDC(IntPtr.Zero);
+        try
         {
-            var row = new byte[stride];
-            for (int y = 0; y < h / 2; y++)
-            {
-                Buffer.BlockCopy(px, y * stride, row, 0, stride);
-                Buffer.BlockCopy(px, (h - 1 - y) * stride, px, y * stride, stride);
-                Buffer.BlockCopy(row, 0, px, (h - 1 - y) * stride, stride);
-            }
+            if (GetDIBits(dc, hbm, 0, (uint)h, px, ref bi, 0 /* DIB_RGB_COLORS */) != h) return null;
         }
+        finally { ReleaseDC(IntPtr.Zero, dc); }
 
         bool hasAlpha = false;
         for (int i = 3; i < px.Length; i += 4) if (px[i] != 0) { hasAlpha = true; break; }
