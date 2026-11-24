@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>FolderPeek</AssemblyName>
+    <RootNamespace>FolderPeek</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <Version>0.1.0</Version>
+    <Product>FolderPeek</Product>
+    <Description>Preview flutuante do conteúdo de pastas da Área de Trabalho ao passar o mouse.</Description>
+    <!-- WinForms só é usado para o NotifyIcon da bandeja; o DPI (PMv2) vem do app.manifest, que é o certo para WPF -->
+    <NoWarn>$(NoWarn);WFO0003;WFO5001;WFAC010</NoWarn>
+  </PropertyGroup>
+
+</Project>
