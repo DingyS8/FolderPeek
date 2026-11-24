@@ -43,8 +43,14 @@ public partial class App : Application
             return;
         }
 
-        int pi = Array.IndexOf(e.Args, "--preview");
-        if (pi >= 0 && pi + 1 < e.Args.Length) { RunPreviewDemo(e.Args[pi + 1]); return; }
+        int pi = Array.IndexOf(e.Args, "--preview"); // --preview <pasta> [x y]  (x y = centro do ícone, px físicos)
+        if (pi >= 0 && pi + 1 < e.Args.Length)
+        {
+            POINT? at = pi + 3 < e.Args.Length && int.TryParse(e.Args[pi + 2], out var x) && int.TryParse(e.Args[pi + 3], out var y)
+                ? new POINT { X = x, Y = y } : null;
+            RunPreviewDemo(e.Args[pi + 1], at);
+            return;
+        }
 
         Log.Verbose = e.Args.Contains("--verbose");
 
@@ -117,9 +123,10 @@ public partial class App : Application
         Shutdown();
     }
 
-    private void RunPreviewDemo(string folder)
+    private void RunPreviewDemo(string folder, POINT? at)
     {
-        Win32.GetCursorPos(out var pt);
+        POINT pt;
+        if (at is { } p) pt = p; else Win32.GetCursorPos(out pt);
         var rect = new RECT(pt.X - 40, pt.Y - 40, pt.X + 40, pt.Y + 50);
         var preview = new PreviewWindow { MaxItems = AppSettings.Load().MaxItems };
         preview.ShowFor(new DesktopHit(folder, folder, Path.GetFileName(folder.TrimEnd('\\')), rect, false));

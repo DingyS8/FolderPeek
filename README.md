@@ -1,86 +1,145 @@
+<div align="center">
+
+<img src="docs/logo.svg" width="96" alt="FolderPeek logo"/>
+
 # FolderPeek
 
-Utilitário de bandeja para Windows 10/11: **clique uma vez** numa pasta (ou atalho de pasta) da Área de Trabalho,
-ou pare o mouse **1,5 s** em cima dela, e aparece um popup escuro, com cantos arredondados, listando o conteúdo —
-sem roubar o foco. O gatilho é escolhido na bandeja ("Abrir preview com": clique, hover ou os dois).
+**Peek inside desktop folders without opening them.**<br/>
+Click a folder (or hover over it) on your Windows desktop and a Windows 11-style popup shows what's inside.
 
-- Clique duplo continua abrindo a pasta normalmente (o 2º clique fecha o preview); clicar de novo no mesmo
-  ícone fecha; arrastar ícones e Ctrl/Shift+clique não abrem nada.
+[![Build](https://github.com/DingyS8/FolderPeek/actions/workflows/build.yml/badge.svg)](https://github.com/DingyS8/FolderPeek/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/DingyS8/FolderPeek?color=4c8bf5)](https://github.com/DingyS8/FolderPeek/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/DingyS8/FolderPeek/total?color=7c3aed)](https://github.com/DingyS8/FolderPeek/releases)
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows11&logoColor=white)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
 
-- Visual: acrílico do Windows 11 (desfoque real do fundo; sólido no Windows 10), cantos e sombra do sistema,
-  grade de ícones grandes com miniaturas reais de imagens/vídeos/PDF, cor de destaque do Windows no hover,
-  entrada com fade + deslize e caminho clicável no cabeçalho (Raiz › … › atual).
-- Passe o mouse num item para ver nome completo, tamanho e data no rodapé.
-- Clique em **arquivo** → abre e fecha o preview.
-- Clique em **subpasta** → navega dentro do preview (botão ← volta). **Ctrl+clique** abre no Explorador.
-- Botão ↗ no cabeçalho → abre a pasta atual no Explorador.
-- O preview fecha sozinho (fade) quando o mouse sai do ícone **e** do popup. Há um "corredor" de tolerância
-  entre os dois e 300 ms de carência.
-- Bandeja: pausar (ou clique duplo no ícone), tempo de hover (0,5–3 s), iniciar com o Windows, logs, sair.
+<a href="https://github.com/DingyS8/FolderPeek/releases/latest"><b>⬇️ Download FolderPeek.exe</b></a>
+&nbsp;·&nbsp;
+<a href="README.pt-BR.md">🇧🇷 Leia em português</a>
 
-## Build
+<br/><br/>
 
-Requer .NET 10 SDK.
+<img src="docs/screenshot.png" width="760" alt="FolderPeek popup showing the contents of a desktop folder"/>
+
+</div>
+
+## ✨ Features
+
+- 🖱️ **Single click or hover**: click a folder once, or rest the mouse on it for 1.5 s. You pick the trigger in the tray menu.
+- 🪟 **Feels native**: real Windows 11 acrylic blur, rounded corners, system shadow and your **accent color**. Falls back to a solid look on Windows 10.
+- 🖼️ **Real thumbnails** for photos, videos, PDFs and 3D files (`.stl`, `.3mf`), and native icons for everything else.
+- 📂 **Browse without leaving the desktop**: click subfolders to step inside, use ← to go back, or click any part of the **breadcrumb path**.
+- ⚡ **Never steals focus**: the popup doesn't activate, so whatever you were typing in stays focused.
+- 🧠 **Closes when you're done**: it fades out once the mouse leaves both the icon and the popup, with a forgiving gap between them.
+- 🔗 Works with **folder shortcuts** (`.lnk`) too.
+- 🙈 Respects Explorer's settings: hidden files, protected system files and *hide extensions*.
+- ☁️ **OneDrive-safe**: cloud-only placeholder files are never read, so peeking never triggers a download.
+- 🪶 Light on resources: a 50 ms cursor poll costs ~0% CPU, and nothing is injected into `explorer.exe`.
+
+## 🚀 Getting started
+
+1. Download **`FolderPeek.exe`** from the [latest release](https://github.com/DingyS8/FolderPeek/releases/latest). It's one self-contained file, so you don't need to install .NET.
+2. Run it. A folder icon appears in the system tray.
+3. Click any folder on your desktop. That's it.
+
+> [!NOTE]
+> The exe isn't code-signed yet, so Windows SmartScreen may say *"Windows protected your PC"*. Click **More info → Run anyway**. You can also build it yourself from source (see below).
+
+### Using it
+
+| Action | Result |
+|---|---|
+| Click a folder on the desktop | Opens the preview |
+| Double-click | Opens the folder normally (the preview closes) |
+| Click a **file** in the preview | Opens it |
+| Click a **subfolder** in the preview | Navigates into it |
+| **Ctrl+click** a subfolder | Opens it in File Explorer |
+| ↗ button in the header | Opens the current folder in File Explorer |
+| Hover an item | Shows full name, size and date in the footer |
+| Drag icons, or Ctrl/Shift+click | Ignored, so desktop selection works as usual |
+
+### Tray menu
+
+Right-click the tray icon to:
+- **pause** (or double-click the icon)
+- choose the trigger: *click*, *hover* or *both*
+- set the hover delay (0.5–3 s)
+- **start with Windows**
+- open the logs folder
+
+Settings live in `%APPDATA%\FolderPeek\settings.json`.
+
+> [!NOTE]
+> The interface is currently in Brazilian Portuguese. Translations are welcome (see *Contributing*).
+
+## 🛠️ Build from source
+
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```powershell
+git clone https://github.com/DingyS8/FolderPeek.git
+cd FolderPeek
 dotnet build -c Release
 .\bin\Release\net10.0-windows\win-x64\FolderPeek.exe
 ```
 
-Exe único autocontido (não precisa de runtime instalado na máquina de destino):
+Single self-contained exe (the same file the release ships):
 
 ```powershell
 dotnet publish -c Release --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 ```
 
-## Diagnóstico
+### Diagnostics
 
-| Comando | O que faz |
+| Command | What it does |
 |---|---|
-| `FolderPeek.exe --diag [atalhos.lnk...]` | Casa todos os ícones do desktop (UIA × IFolderView) sem mexer o mouse; grava `%LOCALAPPDATA%\FolderPeek\diag.txt` |
-| `FolderPeek.exe --preview "C:\pasta"` | Mostra o popup no cursor por 15 s (teste visual) |
-| `FolderPeek.exe --thumb "C:\foto.jpg" saida.png [px]` | Gera a miniatura exatamente como o popup e salva em PNG |
+| `FolderPeek.exe --verbose` | Logs every step to `%LOCALAPPDATA%\FolderPeek\folderpeek.log` |
+| `FolderPeek.exe --diag` | Matches every desktop icon (UI Automation × IFolderView) without moving the mouse, and writes `diag.txt` |
+| `FolderPeek.exe --preview "C:\folder" [x y]` | Shows the popup for 15 s at the cursor (or at `x y`) |
+| `FolderPeek.exe --thumb "C:\photo.jpg" out.png [px]` | Renders a thumbnail exactly as the popup does |
 
-Log: `%LOCALAPPDATA%\FolderPeek\folderpeek.log` · Config: `%APPDATA%\FolderPeek\settings.json`
-(`HoverDelayMs`, `Paused`, `MaxItems`).
-
-## Como funciona
+## 🔍 How it works
 
 ```
-DispatcherTimer 50 ms ──► GetCursorPos + WindowFromPoint
-                          └─ é SysListView32 ⊂ SHELLDLL_DefView ⊂ Progman/WorkerW?  (senão: nada)
-                          └─ parado (raio ~10 px) por HoverDelayMs, sem botão pressionado?
-                                 │
-                                 ▼  Task.Run (thread MTA)
-                    UI Automation FromPoint ──► ListItem: retângulo + rótulo
-                    IShellWindows.FindWindowSW(SWC_DESKTOP) ──► IShellBrowser ──► IFolderView
-                          └─ itens + GetItemPosition → casa por posição, confirma por nome
-                          └─ PIDL → SHGetNameFromIDList(FILESYSPATH) → caminho completo
-                          └─ pasta? ou .lnk (IShellLinkW) apontando para pasta?
-                                 │
-                                 ▼  thread de UI
-                    PreviewWindow (WPF, WS_EX_NOACTIVATE) ← FolderLister (background)
+DispatcherTimer 50 ms ─► GetCursorPos + WindowFromPoint
+                         └─ is it SysListView32 ⊂ SHELLDLL_DefView ⊂ Progman/WorkerW?  (if not: do nothing)
+   click (WH_MOUSE_LL, forward-only) or hover timeout
+                                │
+                                ▼  background thread
+              UI Automation: desktop ListView items → bounding-rect hit test
+              IShellWindows.FindWindowSW(SWC_DESKTOP) → IShellBrowser → IFolderView
+                         └─ match by position + name → PIDL → full path
+                         └─ folder, or a .lnk (IShellLinkW) pointing to a folder?
+                                │
+                                ▼  UI thread
+              PreviewWindow (WPF, WS_EX_NOACTIVATE, DWM acrylic)
+                         └─ IShellItemImageFactory thumbnails on a dedicated STA thread
 ```
 
-Decisões:
+Design notes:
+- **Polling instead of a global hook for hover.** A low-level hook slows down the whole system's mouse if its thread stalls.
+- **Click detection uses a forward-only `WH_MOUSE_LL` hook** on its own thread. It never blocks or swallows input, and it exists only while click mode is on.
+- **No `AutomationElement.FromPoint`.** Fullscreen transparent overlays (such as the NVIDIA GeForce overlay) win that hit test, so FolderPeek hit-tests the desktop ListView's own item rectangles instead.
+- **No injection, no reading another process's memory.** That keeps antivirus software happy.
+- **Per-Monitor V2 DPI**: cursor, rectangles and window placement are all in physical pixels.
 
-- **Polling em vez de hook global de mouse** (`WH_MOUSE_LL`): um hook atrasa o mouse do sistema inteiro se
-  a thread travar; o polling custa ~0% de CPU e nunca interfere em outras janelas.
-- **Clique via hook `WH_MOUSE_LL` numa thread dedicada** que só repassa o evento (nunca bloqueia nem engole o
-  clique) e só existe com o modo de clique ligado — polling perderia cliques rápidos.
-- **Sem `AutomationElement.FromPoint`**: overlays transparentes de tela cheia (NVIDIA GeForce Overlay, etc.)
-  ganham o hit-test do UIA. O hit-test é feito nos retângulos dos itens do próprio ListView do desktop.
-- **UIA + IFolderView juntos**: o UIA sabe *se* o cursor está sobre um ícone (e o retângulo exato), mas não o
-  caminho; o IFolderView dá o caminho, mas não faz hit-test. Nada é injetado no `explorer.exe` nem há leitura de
-  memória de outro processo (evita alarmes de antivírus).
-- **Per-Monitor V2 DPI** no manifest: cursor, retângulos e `SetWindowPos` tudo em pixels físicos.
-- O popup respeita as opções do Explorer: itens ocultos, arquivos protegidos do SO, extensões de tipos conhecidos.
-- Ícones via `SHGetFileInfo`, com cache por extensão; arquivos-placeholder do OneDrive nunca são lidos (não
-  disparam download).
+## ⚠️ Known limitations
 
-## Limitações conhecidas
+- Mouse-wheel scrolling relies on *"Scroll inactive windows when hovering over them"*, which is on by default.
+- Virtual items (Recycle Bin, This PC) and `.zip` files don't open a preview.
+- Emoji in file names render monochrome (a WPF limitation).
+- There's no right-click context menu on preview items yet.
 
-- Rolagem com a roda depende de "Rolar janelas inativas ao passar o mouse" (ligado por padrão no Windows 10/11).
-- Itens virtuais (Lixeira, Este Computador) e `.zip` não abrem preview.
-- Emojis em nomes aparecem monocromáticos (limitação do WPF).
-- Sem menu de contexto (botão direito) nos itens do preview.
+## 🤝 Contributing
+
+Issues and pull requests are welcome! Good first contributions:
+- an English/multi-language UI
+- a context menu on items
+- `.zip` preview
+
+Please open an issue before starting a large change.
+
+## 📄 License
+
+[MIT](LICENSE). Use it, fork it, ship it.

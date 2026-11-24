@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7c948"/>
+      <stop offset="1" stop-color="#e0a21a"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="1" stop-color="#f5bd2f"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 30a8 8 0 0 1 8-8h28l10 10h54a8 8 0 0 1 8 8v58a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8z" fill="url(#back)"/>
+  <rect x="10" y="42" width="108" height="64" rx="8" fill="url(#front)"/>
+  <circle cx="78" cy="74" r="22" fill="#1e1b2e" stroke="url(#glass)" stroke-width="7"/>
+  <circle cx="78" cy="74" r="8" fill="url(#glass)"/>
+  <circle cx="74" cy="70" r="3" fill="#fff" opacity=".9"/>
+  <path d="M94 90l16 16" stroke="url(#glass)" stroke-width="9" stroke-linecap="round"/>
+</svg>
