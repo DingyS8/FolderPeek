@@ -1,21 +1,21 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using FolderPeek.Native;
 using Microsoft.Win32;
 
 namespace FolderPeek;
 
-internal sealed class FolderEntry
+internal sealed class FolderEntry : INotifyPropertyChanged
 {
     private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
+
+    /// <summary>Tamanho do ícone em pixels físicos (48 DIP × escala do monitor).</summary>
+    public static int IconPx { get; set; } = 48;
 
     public required string Name { get; init; }
     public required string FullPath { get; init; }
@@ -24,26 +24,33 @@ internal sealed class FolderEntry
     public DateTime Modified { get; init; }
     public FileAttributes Attributes { get; init; }
 
-    private ImageSource? _icon;
-    private bool _iconLoaded;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    /// <summary>Carregado sob demanda (só itens visíveis são realizados pela virtualização).</summary>
+    private ImageSource? _icon;
+    private bool _requested;
+
+    /// <summary>Ícone grande/miniatura, carregado em background; avisa a UI quando chega.</summary>
     public ImageSource? Icon
     {
         get
         {
-            if (!_iconLoaded) { _iconLoaded = true; _icon = IconCache.Get(FullPath, IsDirectory, Attributes); }
+            if (!_requested)
+            {
+                _requested = true;
+                _icon = ShellImageLoader.Get(FullPath, IsDirectory, Attributes, IconPx, img =>
+                {
+                    _icon = img;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Icon)));
+                });
+            }
             return _icon;
         }
     }
 
-    public string Meta => IsDirectory
-        ? $"Pasta · {Modified.ToString("dd/MM/yyyy HH:mm", PtBr)}"
-        : Modified.ToString("dd/MM/yyyy HH:mm", PtBr);
-
-    public string SizeText => IsDirectory ? string.Empty : FormatSize(Size);
-
-    public Visibility ChevronVisibility => IsDirectory ? Visibility.Visible : Visibility.Collapsed;
+    /// <summary>Linha do rodapé quando o mouse está sobre o item.</summary>
+    public string Details => IsDirectory
+        ? $"{Name}  ·  Pasta  ·  {Modified.ToString("dd/MM/yyyy HH:mm", PtBr)}"
+        : $"{Name}  ·  {FormatSize(Size)}  ·  {Modified.ToString("dd/MM/yyyy HH:mm", PtBr)}";
 
     public static string FormatSize(long bytes)
     {
@@ -152,80 +159,5 @@ internal static class FolderLister
             KnownExtCache[ext] = known;
             return known;
         }
-    }
-}
-
-/// <summary>
-/// Ícones nativos via SHGetFileInfo. Tipos "genéricos" são cacheados por extensão
-/// (sem tocar no disco); .exe/.lnk/.ico e pastas personalizadas são por arquivo.
-/// Arquivos-placeholder da nuvem (OneDrive) nunca são lidos, para não disparar download.
-/// Uso só na thread de UI.
-/// </summary>
-internal static class IconCache
-{
-    private static readonly Dictionary<string, ImageSource?> Cache = new(StringComparer.OrdinalIgnoreCase);
-
-    private static readonly HashSet<string> PerFileExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "", ".exe", ".lnk", ".ico", ".url", ".cur", ".ani", ".msc", ".scr", ".cpl", ".appref-ms",
-    };
-
-    // FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | RECALL_ON_OPEN | OFFLINE
-    private const int CloudMask = 0x00400000 | 0x00040000 | 0x00001000;
-
-    public static ImageSource? Get(string path, bool isDir, FileAttributes attrs)
-    {
-        bool cloud = ((int)attrs & CloudMask) != 0;
-        bool generic;
-        string key;
-        if (isDir)
-        {
-            // Pastas com desktop.ini (ícone customizado) têm ReadOnly ou System.
-            generic = cloud || (attrs & (FileAttributes.ReadOnly | FileAttributes.System)) == 0;
-            key = generic ? "<dir>" : path;
-        }
-        else
-        {
-            var ext = Path.GetExtension(path);
-            generic = cloud || !PerFileExtensions.Contains(ext);
-            key = generic ? "*" + ext : path;
-        }
-
-        if (Cache.TryGetValue(key, out var img)) return img;
-        if (Cache.Count > 3000) Cache.Clear();
-        img = Load(path, isDir, generic);
-        Cache[key] = img;
-        return img;
-    }
-
-    public static ImageSource? ForFolder(string path)
-    {
-        FileAttributes a = FileAttributes.Directory;
-        try { a = File.GetAttributes(path); } catch { }
-        return Get(path, true, a);
-    }
-
-    private static ImageSource? Load(string path, bool isDir, bool generic)
-    {
-        var info = new SHFILEINFO();
-        uint flags = Win32.SHGFI_ICON | Win32.SHGFI_SMALLICON;
-        uint fileAttrs = 0;
-        if (generic)
-        {
-            flags |= Win32.SHGFI_USEFILEATTRIBUTES;
-            fileAttrs = isDir ? Win32.FILE_ATTRIBUTE_DIRECTORY : Win32.FILE_ATTRIBUTE_NORMAL;
-        }
-
-        if (Win32.SHGetFileInfo(path, fileAttrs, ref info, (uint)Marshal.SizeOf<SHFILEINFO>(), flags) == IntPtr.Zero
-            || info.hIcon == IntPtr.Zero)
-            return null;
-        try
-        {
-            var src = Imaging.CreateBitmapSourceFromHIcon(info.hIcon, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            src.Freeze();
-            return src;
-        }
-        catch { return null; }
-        finally { Win32.DestroyIcon(info.hIcon); }
     }
 }

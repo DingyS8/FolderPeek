@@ -7,6 +7,10 @@ sem roubar o foco. O gatilho é escolhido na bandeja ("Abrir preview com": cliqu
 - Clique duplo continua abrindo a pasta normalmente (o 2º clique fecha o preview); clicar de novo no mesmo
   ícone fecha; arrastar ícones e Ctrl/Shift+clique não abrem nada.
 
+- Visual: acrílico do Windows 11 (desfoque real do fundo; sólido no Windows 10), cantos e sombra do sistema,
+  grade de ícones grandes com miniaturas reais de imagens/vídeos/PDF, cor de destaque do Windows no hover,
+  entrada com fade + deslize e caminho clicável no cabeçalho (Raiz › … › atual).
+- Passe o mouse num item para ver nome completo, tamanho e data no rodapé.
 - Clique em **arquivo** → abre e fecha o preview.
 - Clique em **subpasta** → navega dentro do preview (botão ← volta). **Ctrl+clique** abre no Explorador.
 - Botão ↗ no cabeçalho → abre a pasta atual no Explorador.

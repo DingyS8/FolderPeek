@@ -19,7 +19,7 @@ internal sealed class HoverMonitor
     private const int TickMs = 50;
     private const int CloseGraceMs = 300;   // tempo fora da área antes de fechar
     private const int ItemMarginPx = 6;     // tolerância ao redor do ícone
-    private const int PreviewMarginPx = 8;  // tolerância extra ao redor do popup
+    private const int PreviewMarginPx = 16; // tolerância ao redor do popup (a sombra é do DWM, fora do rect)
 
     private readonly DispatcherTimer _timer;
     private readonly PreviewWindow _preview;

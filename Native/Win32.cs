@@ -148,6 +148,19 @@ internal static class Win32
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyIcon(IntPtr hIcon);
 
+    // ---- DWM (Windows 11) -----------------------------------------------------
+    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    public const int DWMWA_CLOAK = 13;
+    public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
+    public const int DWMWCP_ROUND = 2;
+    public const int DWMSBT_TRANSIENTWINDOW = 3; // acrílico (flyouts)
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+    public static int SetDwm(IntPtr hwnd, int attr, int value) => DwmSetWindowAttribute(hwnd, attr, ref value, sizeof(int));
+
     // ---- shell -------------------------------------------------------------
     public const uint SHGFI_ICON = 0x000000100;
     public const uint SHGFI_SMALLICON = 0x000000001;
